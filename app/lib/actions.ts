@@ -1,5 +1,6 @@
 "use server";
 
+import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { signIn } from "@/auth";
@@ -120,8 +121,13 @@ export async function authenticate(
   try {
     await signIn("credentials", Object.fromEntries(formData));
   } catch (error) {
-    if ((error as Error).message.includes("CredentialsSignin")) {
-      return "CredentialsSignin";
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return "Invalid credentials.";
+        default:
+          return "Something went wrong.";
+      }
     }
     throw error;
   }
